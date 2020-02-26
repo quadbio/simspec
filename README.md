@@ -12,8 +12,8 @@ Usage
 ------
 ### Reference Similarity Spectrum (RSS)
 To calculate RSS, two inputs are required
-..* Expression matrix of the data (expr)
-..* Expression matrix of the reference (ref)
+* Expression matrix of the data (expr)
+* Expression matrix of the reference (ref)
 ```
 RSS <- ref_sim_spectrum(expr, ref)
 ```
@@ -25,8 +25,8 @@ seurat <- RunUMAP(seurat, reduction = "rss", dims = 1:ncol(Embeddings(seurat, "r
 
 ### Cluster Similarity Spectrum (CSS)
 To calculate CSS, two inputs are required
-..* Expression matrix of the data (expr)
-..* Labels indicating samples (labels)
+* Expression matrix of the data (expr)
+* Labels indicating samples (labels)
 ```
 CSS <- cluster_sim_spectrum(expr, labels = labels)
 ```
