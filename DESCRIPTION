@@ -1,0 +1,25 @@
+Package: simspec
+Title: Calculate data representation of Reference/Cluster Similarity Spectrum
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Zhisong",
+           family = "He",
+           role = c("aut", "cre"),
+           email = "zhisong.he@bsse.ethz.ch",
+           comment = c(ORCID = "0000-0002-1502-4801"))
+Description: Similarity Spectrum, including both Reference Similarity Spectrum (RSS)
+    and Cluster Similarity Spectrum (CSS), is a way of data representation for large
+    sample genomic data, particularly single-cell RNA-seq data. It represents each
+    sample by its normalized similarities to a group of external references (RSS) or
+    sample clusters of the data (CSS). This representation shows strong resistence to
+    noises and technical variation such as batch effect, therefore can be used for
+    data integration of multiple data sets. It also allows projection of new data to
+    the existing reference data set easily.
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+Imports:
+    irlba,
+    igraph,
+    RANN,
+RoxygenNote: 7.0.2
