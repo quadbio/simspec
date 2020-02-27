@@ -40,12 +40,10 @@ CSS representation allows simple and straightforward projection of query data to
 ```
 model <- cluster_sim_spectrum(expr_ref, labels = labels_ref, return_css_only = F)
 model <- cluster_sim_spectrum(seurat_ref, label_tag = "sample", return_seuratObj = F)
-
 ```
 The model is then used to project query data to the same CSS space
 ```
 css_query <- css_project(expr_query, model)
 seurat_query <- css_project(seurat_query, model)
-
 ```
 
