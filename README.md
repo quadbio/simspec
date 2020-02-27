@@ -35,4 +35,17 @@ Similarly, a Seurat object can be the input. When a Seurat object is used, the n
 seurat <- cluster_sim_spectrum(seurat, label_tag = "sample")
 seurat <- RunUMAP(seurat, reduction = "css", dims = 1:ncol(Embeddings(seurat, "css")))
 ```
+### CSS for query data projection
+CSS representation allows simple and straightforward projection of query data to a reference atlas. To do that, the CSS representation model of the reference data needs to be returned.
+```
+model <- cluster_sim_spectrum(expr_ref, labels = labels_ref, return_css_only = F)
+model <- cluster_sim_spectrum(seurat_ref, label_tag = "sample", return_seuratObj = F)
+
+```
+The model is then used to project query data to the same CSS space
+```
+css_query <- css_project(expr_query, model)
+seurat_query <- css_project(seurat_query, model)
+
+```
 
