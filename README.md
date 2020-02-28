@@ -30,7 +30,8 @@ To calculate CSS, two inputs are required
 ```
 CSS <- cluster_sim_spectrum(expr, labels = labels)
 ```
-Similarly, a Seurat object can be the input. When a Seurat object is used, the name of a column in the meta.data, which shows labels of samples, should be provided
+Similarly, a Seurat object can be the input. When a Seurat object is used, the name of a column in the meta.data, which shows labels of samples, should be provided.
+_Note: the Seurat object is expected to have variable features defined and PCA ran_
 ```
 seurat <- cluster_sim_spectrum(seurat, label_tag = "sample")
 seurat <- RunUMAP(seurat, reduction = "css", dims = 1:ncol(Embeddings(seurat, "css")))
