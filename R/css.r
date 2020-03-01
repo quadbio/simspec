@@ -382,6 +382,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     #sim2profiles <- t(scale(t(sim2profiles)))
   }
   rownames(sim2profiles) <- colnames(data)
+  colnames(sim2profiles) <- paste0("CSS_", 1:ncol(sim2profiles))
   
   if (verbose)
     cat("Done.\n")
