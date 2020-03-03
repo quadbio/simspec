@@ -507,7 +507,7 @@ css_project.Seurat <- function(object,
   dat <- object@assays[[DefaultAssay(object)]]@data
   css_proj <- css_project(dat, model)
   rownames(css_proj) <- colnames(object)
-  object[[reduction.name]] <- CreateDimReducObject(css_proj, key = reduction.key, assay = DefaultArray(object))
+  object[[reduction.name]] <- CreateDimReducObject(css_proj, key = reduction.key, assay = DefaultAssay(object))
   return(object)
 }
 
