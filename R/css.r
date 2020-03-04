@@ -50,9 +50,9 @@ build_knn_graph <- function(data,
     
   } else{
     if (mutual){
-      adj <- adj * t(adj)
+      adj <- adj * Matrix::t(adj)
     } else{
-      adj <- adj + t(adj)
+      adj <- adj + Matrix::t(adj)
       adj <- Matrix::sparseMatrix(i = adj@i, p = adj@p, dims = adj@Dim, index1 = FALSE) + 0
     }
     if (verbose)
@@ -536,7 +536,7 @@ transfer_labels <- function(data_ref = NULL, data_query = NULL, knn_ref_query = 
   colnames(proj_cl_num_query) <- levels(label_ref)
   
   label_query_proj <- colnames(proj_cl_num_query)[apply(proj_cl_num_query, 1, which.max)]
-  label_query_proj[which(rowMax(proj_cl_num_query) < ncol(knn_ref_query) * thres_prop_match)] <- NA
+  label_query_proj[which(apply(proj_cl_num_query,1,max) < ncol(knn_ref_query) * thres_prop_match)] <- NA
   return(label_query_proj)
 }
 
