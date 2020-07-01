@@ -1,5 +1,5 @@
 # Tutorial of using CSS to integrate single-cell RNA-seq data
-#### Compiled by Zhisong He, Barbara Treutlein
+#### Compiled by Zhisong He
 #### Updated on 2020-07-01
 ### Table of Content
   * [Introduction](#introduction)
@@ -109,7 +109,7 @@ UMAPPlot(pbmcsca, group.by = "Method") + UMAPPlot(pbmcsca, group.by = "CellType"
 <img src="images/umap_nointeg_pbmc.png" /><br/><br/>
 
 ### Step 2. CSS calculation with kernel probability transformation
-
+For any data set with distinct cell types, Pearson correlation based similarity combined with kernel probability transformation more likely provides better result
 ```R
 pbmcsca <- cluster_sim_spectrum(object = pbmcsca, label_tag = "Method",
                                 cluster_resolution = 0.4,
