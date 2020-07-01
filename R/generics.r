@@ -36,3 +36,14 @@ ref_sim_spectrum <- function(object, ...){
 	UseMethod(generic = 'ref_sim_spectrum', object = object)
 }
 
+#' Principal component analysis on dimension reduced data
+#' 
+#' Do PCA analysis on dimension reduced data to further reduce
+#' data dimensionality
+#' 
+#' @param object An object
+#' @rdname run_PCA
+#' @export run_PCA
+run_PCA <- function(object, ...){
+  UseMethod(generic = 'run_PCA', object = object)
+}

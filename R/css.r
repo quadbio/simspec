@@ -165,7 +165,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
 										 cluster_resolution = 0.6,
 										 spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"), # clustering and types of spectrum
                                          corr_method = c("spearman","pearson"),
-										 lambda = 1,
+										 lambda = 50,
 										 threads = 1,  # spectrum related parameters
                                          train_on = c("raw","pseudo","rand"),
 										 downsample_ratio = 1/10,
