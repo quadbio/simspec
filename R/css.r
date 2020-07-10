@@ -235,6 +235,19 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   if (verbose)
     cat("Finished clustering.\n")
   
+  
+  if (spectrum_type == "nnet"){
+    if (! require(nnet)){
+      warning("cannot find package nnet, switch spectrum type to corr_ztransform")
+      spectrum_type <- "corr_ztransform"
+    }
+  } else if (spectrum_type == "lasso"){
+    if (! require(glmnet)){
+      warning("cannot find package glmnet, switch spectrum type to corr_ztransform")
+      spectrum_type <- "corr_ztransform"
+    }
+  }
+  
   if (spectrum_type %in% c("corr_ztransform","corr_kernel","corr_raw")){
     cl_profiles <- lapply(levels(labels), function(x){
       idx <- which(labels == x)
@@ -251,18 +264,6 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     sim2profiles <- lapply(cl_profiles, function(profiles){
       cor(as.matrix(data), profiles, method=corr_method)
     })
-    
-    if (spectrum_type == "nnet"){
-      if (! require(nnet)){
-        warning("cannot find package nnet, switch spectrum type to corr_ztransform")
-        spectrum_type <- "corr_ztransform"
-      }
-    } else if (spectrum_type == "lasso"){
-      if (!require(glmnet)){
-        warning("cannot find package glmnet, switch spectrum type to corr_ztransform")
-        spectrum_type <- "corr_ztransform"
-      }
-    }
     
     if (spectrum_type == "corr_ztransform"){
       if (verbose)
@@ -420,7 +421,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
 cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F, use_dr = "pca", dims_use = 1:20,
                                         label_tag, redo_pca = FALSE, redo_pca_with_data = FALSE, k = 20, ...,
                                         cluster_resolution = 0.6, spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"),
-                                        corr_method = c("spearman","pearson"), lambda = 1, threads = 1,
+                                        corr_method = c("spearman","pearson"), lambda = 50, threads = 1,
                                         train_on = c("raw","pseudo","rand"), downsample_ratio = 1/10, k_pseudo = 10, logscale_likelihood = F,
                                         merge_spectrums = FALSE, merge_height_prop = 1/10, spectrum_dist_type = c("pearson", "euclidean"), spectrum_cl_method = "complete",
                                         reduction.name = "css", reduction.key = "CSS_",

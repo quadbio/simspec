@@ -10,6 +10,8 @@ devtools::install_github("quadbiolab/simspec")
 
 Usage
 ------
+The more detailed vignette can be seen in https://github.com/quadbiolab/simspec/blob/master/vignette/vignette.md.
+
 ### Reference Similarity Spectrum (RSS)
 To calculate RSS, two inputs are required
 * Expression matrix of the data (expr)
