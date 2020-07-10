@@ -48,7 +48,7 @@
   cluster_resolution = 0.6,
   spectrum_type = c("corr_ztransform", "corr_kernel", "corr_raw", "nnet", "lasso"),
   corr_method = c("spearman", "pearson"),
-  lambda = 1,
+  lambda = 50,
   threads = 1,
   train_on = c("raw", "pseudo", "rand"),
   downsample_ratio = 1/10,
