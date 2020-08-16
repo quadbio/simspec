@@ -12,6 +12,8 @@ Usage
 ------
 The more detailed vignette can be seen in https://github.com/quadbiolab/simspec/blob/master/vignette/vignette.md.
 
+The codes to generate resulted reported in the manuscript (https://doi.org/10.1101/2020.02.27.968560) are deposited in https://github.com/quadbiolab/simspec/blob/master/code_repository/. Data can be retrieved from Mendeley Data (http://doi.org/10.17632/3kthhpw2pd).
+
 ### Reference Similarity Spectrum (RSS)
 To calculate RSS, two inputs are required
 * Expression matrix of the data (expr)
