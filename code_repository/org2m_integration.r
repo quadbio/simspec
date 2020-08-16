@@ -13,7 +13,6 @@ library(lisi)
 library(doParallel)
 
 # retrieve data and preprocess
-seurat <- readRDS("cerebral_org2m_processed.rds")
 
 ## Important: the actually analysis was done on the preprocessed data 
 ## described in [Kanton et al. 2019], which was relied on Seurat v2.
@@ -21,11 +20,19 @@ seurat <- readRDS("cerebral_org2m_processed.rds")
 ## slightly different results (esp. for the cluster labels used to build
 ## cell-level regional identity predictor)
 
-#seurat <- readRDS("cerebral_org2m.rds")
-#seurat <- NormalizeData(seurat) %>%
+#counts <- readMM("cerebral_organoids_Kanton_2019_org2m/matrix.mtx.gz")
+#meta <- read.table("cerebral_organoids_Kanton_2019_org2m/cells.tsv.gz", sep="\t")
+#features <- read.table("cerebral_organoids_Kanton_2019_org2m/features.tsv.gz", sep="\t", stringsAsFactors = F)
+#rownames(counts) <- make.unique(features[,2])
+#colnames(counts) <- rownames(meta)
+#seurat <- CreateSeuratObject(counts = counts, meta.data = meta) %>%
+#  NormalizeData() %>%
 #  FindVariableFeatures(nfeatures = 5000) %>%
-#  ScaleData() %>%
-#  RunPCA(npcs = 20, verbose=F)
+#  ScaleData()
+
+seurat <- readRDS("cerebral_org2m_processed.rds")
+seurat <- RunPCA(seurat, npcs = 20, verbose=F) %>%
+  RunUMAP(seurat, reduction = "pca", dims = 1:20)
 
 
 # integration

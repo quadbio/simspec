@@ -53,11 +53,17 @@ data("pbmcsca")
 ```
 
 ## CSS integration for the cerebral organoid data set
-### Step 0. Import packages and data
+### Step 0. Import packages and data (data can be found in Mendeley Data)
 ```R
 library(Seurat)
 library(simspec)
-org2m <- readRDS("cerebral_org2m.rds")
+
+counts <- readMM("cerebral_organoids_Kanton_2019_org2m/matrix.mtx.gz")
+meta <- read.table("cerebral_organoids_Kanton_2019_org2m/cells.tsv.gz", sep="\t")
+features <- read.table("cerebral_organoids_Kanton_2019_org2m/features.tsv.gz", sep="\t", stringsAsFactors = F)
+rownames(counts) <- make.unique(features[,2])
+colnames(counts) <- rownames(meta)
+org2m <- CreateSeuratObject(counts = counts, meta.data = meta)
 ```
 ### Step 1. Data preprocessing
 We need to preprocess the data before CSS calculation. The preprocessing includes data normalization, highly variable features identification, data scaling and PCA
