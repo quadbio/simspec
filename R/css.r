@@ -262,7 +262,12 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     if (verbose)
       cat("Start to calculate standardized similarities to clusters...\n")
     sim2profiles <- lapply(cl_profiles, function(profiles){
-      cor(as.matrix(data), profiles, method=corr_method)
+      if (corr_method == "pearson" & require(qlcMatrix)){
+        sims <- qlcMatrix::corSparse(data, Matrix(profiles))
+      } else{
+        sims <- cor(as.matrix(data), profiles, method=corr_method)
+      }
+      return(sims)
     })
     
     if (spectrum_type == "corr_ztransform"){

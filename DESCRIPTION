@@ -18,8 +18,12 @@ Description: Similarity Spectrum, including both Reference Similarity Spectrum (
 License: What license it uses
 Encoding: UTF-8
 LazyData: true
+Depends:
+    R (>= 3.5.0)
 Imports:
     irlba,
     igraph,
     RANN,
+Suggests:
+    qlcMatrix (>= 0.9.4)
 RoxygenNote: 7.0.2
