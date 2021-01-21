@@ -131,6 +131,7 @@ construct_pseudocells <- function(knn_adj,
 #'@param labels Labels specifying different samples
 #'@param redo_pca If TRUE, PCA is rerun for each sample separately for clustering
 #'@param k Number of nearest neighbors of the kNN network used for clustering
+#'@param min_batch_size The minimal cell number of a batch to be clustered to generate references
 #'@param ... Other parameters to build_knn_graph
 #'@param cluster_method Method used to apply clustering to the kNN network. By default it calls FindClusters in Seurat using Louvain method. Alternative method is the walktrap community identification algorithm in igraph
 #'@param cluster_resolution Resolution of clustering. Ignore if cluster_method is not Seurat
@@ -154,29 +155,30 @@ construct_pseudocells <- function(knn_adj,
 #'@method cluster_sim_spectrum default
 cluster_sim_spectrum.default <- function(object, # expression matrix
                                          dr = NULL,
-										 dr_input = NULL,
-										 num_pcs_compute = 50,
-										 num_pcs_use = 20, # for dimension reduction
+                                         dr_input = NULL,
+                                         num_pcs_compute = 50,
+                                         num_pcs_use = 20, # for dimension reduction
                                          labels,
-										 redo_pca = FALSE,
-										 k = 20,
-										 ..., # how to separate samples and whether or not to do DR separately
+                                         redo_pca = FALSE,
+                                         k = 20,
+                                         min_batch_size = k * 2,
+                                         ..., # how to separate samples and whether or not to do DR separately
                                          cluster_method = c("Seurat","walktrap"),
-										 cluster_resolution = 0.6,
-										 spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"), # clustering and types of spectrum
+                                         cluster_resolution = 0.6,
+                                         spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"), # clustering and types of spectrum
                                          corr_method = c("spearman","pearson"),
-										 lambda = 50,
-										 threads = 1,  # spectrum related parameters
+                                         lambda = 50,
+                                         threads = 1,  # spectrum related parameters
                                          train_on = c("raw","pseudo","rand"),
-										 downsample_ratio = 1/10,
-										 k_pseudo = 10,
-										 logscale_likelihood = F, # parameters of likelihood spectrum
+                                         downsample_ratio = 1/10,
+                                         k_pseudo = 10,
+                                         logscale_likelihood = F, # parameters of likelihood spectrum
                                          merge_spectrums = FALSE,
-										 merge_height_prop = 1/10,
-										 spectrum_dist_type = c("pearson", "euclidean"),
-										 spectrum_cl_method = "complete", # parameters of spectrum merging
+                                         merge_height_prop = 1/10,
+                                         spectrum_dist_type = c("pearson", "euclidean"),
+                                         spectrum_cl_method = "complete", # parameters of spectrum merging
                                          return_css_only = T,
-										 verbose = T){
+                                         verbose = T){
   spectrum_type <- match.arg(spectrum_type)
   cluster_method <- match.arg(cluster_method)
   corr_method <- match.arg(corr_method)
@@ -202,7 +204,9 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   if (verbose)
     cat("Start to do clustering for each sample...\n")
   labels <- as.factor(labels)
-  cl <- lapply(levels(labels), function(x){
+  batches <- names(which(table(labels) >= min_batch_size))
+  
+  cl <- lapply(batches, function(x){
     idx <- which(labels == x)
     dr_x <- dr[idx,]
     if (redo_pca){
@@ -231,7 +235,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       cat(paste0(">> Done clustering of sample ", x, ".\n"))
     return(cl)
   })
-  names(cl) <- levels(labels)
+  names(cl) <- batches
   if (verbose)
     cat("Finished clustering.\n")
   
@@ -249,13 +253,13 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   }
   
   if (spectrum_type %in% c("corr_ztransform","corr_kernel","corr_raw")){
-    cl_profiles <- lapply(levels(labels), function(x){
+    cl_profiles <- lapply(batches, function(x){
       idx <- which(labels == x)
       profiles <- sapply(levels(as.factor(cl[[x]])), function(cl_x)
         apply(data[,idx[as.factor(cl[[x]])==cl_x]], 1, mean))
       return(profiles)
     })
-    names(cl_profiles) <- levels(labels)
+    names(cl_profiles) <- batches
     if (verbose)
       cat("Obtained average profiles of clusters.\n")
     
@@ -285,7 +289,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     if (verbose)
       cat("Start to build multinomial logistic regression models...\n")
     
-    models <- lapply(levels(labels), function(x){
+    models <- lapply(batches, function(x){
       idx_x <- which(labels == x)
       cl_x <- cl[[x]]
       train_x <- t(data[,idx_x])
@@ -344,7 +348,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
         cat(paste0(">> Model trained for sample ", x, ".\n"))
       return(m)
     })
-    names(models) <- levels(labels)
+    names(models) <- batches
     if (verbose)
       cat("Models trained, start to produce likelihood spectrum...\n")
     
@@ -424,7 +428,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
 #'@export
 #'@method cluster_sim_spectrum Seurat
 cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F, use_dr = "pca", dims_use = 1:20,
-                                        label_tag, redo_pca = FALSE, redo_pca_with_data = FALSE, k = 20, ...,
+                                        label_tag, redo_pca = FALSE, redo_pca_with_data = FALSE, k = 20, min_batch_size = k*2, ...,
                                         cluster_resolution = 0.6, spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"),
                                         corr_method = c("spearman","pearson"), lambda = 50, threads = 1,
                                         train_on = c("raw","pseudo","rand"), downsample_ratio = 1/10, k_pseudo = 10, logscale_likelihood = F,
@@ -453,7 +457,7 @@ cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F,
   
   dr <- object@reductions[[use_dr]]@cell.embeddings[,dims_use]
   labels <- object@meta.data[,label_tag]
-  css <- cluster_sim_spectrum.default(object = data, dr = dr, dr_input = dr_input, labels = labels, redo_pca = redo_pca, k = k, ..., cluster_resolution = cluster_resolution,
+  css <- cluster_sim_spectrum.default(object = data, dr = dr, dr_input = dr_input, labels = labels, redo_pca = redo_pca, k = k, min_batch_size = min_batch_size, ..., cluster_resolution = cluster_resolution,
                                       spectrum_type = spectrum_type, corr_method = corr_method, lambda = lambda, threads = threads,
                                       train_on = train_on, downsample_ratio = downsample_ratio, k_pseudo = k_pseudo, logscale_likelihood = logscale_likelihood,
                                       merge_spectrums = merge_spectrums, merge_height_prop = merge_height_prop, spectrum_dist_type = spectrum_dist_type, spectrum_cl_method = spectrum_cl_method,

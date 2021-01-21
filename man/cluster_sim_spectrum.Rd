@@ -15,6 +15,7 @@
   labels,
   redo_pca = FALSE,
   k = 20,
+  min_batch_size = k * 2,
   ...,
   cluster_method = c("Seurat", "walktrap"),
   cluster_resolution = 0.6,
@@ -44,6 +45,7 @@
   redo_pca = FALSE,
   redo_pca_with_data = FALSE,
   k = 20,
+  min_batch_size = k * 2,
   ...,
   cluster_resolution = 0.6,
   spectrum_type = c("corr_ztransform", "corr_kernel", "corr_raw", "nnet", "lasso"),
@@ -82,6 +84,8 @@ cluster_sim_spectrum(object, ...)
 \item{redo_pca}{If TRUE, PCA is rerun for each sample separately for clustering}
 
 \item{k}{Number of nearest neighbors of the kNN network used for clustering}
+
+\item{min_batch_size}{The minimal cell number of a batch to be clustered to generate references}
 
 \item{...}{Other parameters to build_knn_graph}
 
