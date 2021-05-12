@@ -15,6 +15,8 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
   }
   if (scale)
     corr <- t(scale(t(corr)))
+  rownames(corr) <- colnames(object)
+  colnames(corr) <- colnames(ref)
   return(corr)
 }
 
