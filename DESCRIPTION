@@ -21,9 +21,10 @@ LazyData: true
 Depends:
     R (>= 3.5.0)
 Imports:
+    Matrix,
     irlba,
     igraph,
     RANN,
+    qlcMatrix (>= 0.9.4),
 Suggests:
-    qlcMatrix (>= 0.9.4)
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1

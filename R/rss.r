@@ -8,10 +8,10 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
   method <- match.arg(method)
   
   candidates <- intersect(rownames(object), rownames(ref))
-  if (method == "pearson" & require(qlcMatrix)){
+  if (method == "pearson"){
     corr <- qlcMatrix::corSparse(object[candidates,], ref[candidates,])
-  } else{
-    corr <- cor(as.matrix(object[candidates,]), ref[candidates,], method = method)
+  } else if (method == "spearman"){
+    corr <- qlcMatrix::corSparse(rank_input_matrix(object[candidates,]), ref[candidates,])
   }
   if (scale)
     corr <- t(scale(t(corr)))
