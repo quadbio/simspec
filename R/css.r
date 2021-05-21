@@ -143,7 +143,12 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       if (corr_method == "pearson"){
         sims <- qlcMatrix::corSparse(data, Matrix(profiles))
       } else if (corr_method == "spearman"){
-        sims <- qlcMatrix::corSparse(rank_input_matrix(data), profiles)
+        if (require(presto, quietly = T)){
+          ranked_data <- presto::rank_matrix(data)$X_ranked
+        } else{
+          ranked_data <- rank_input_matrix(data)
+        }
+        sims <- qlcMatrix::corSparse(ranked_data, profiles)
       }
       return(sims)
     })
@@ -335,9 +340,9 @@ cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F,
                                       spectrum_type = spectrum_type, corr_method = corr_method, lambda = lambda, threads = threads,
                                       train_on = train_on, downsample_ratio = downsample_ratio, k_pseudo = k_pseudo, logscale_likelihood = logscale_likelihood,
                                       merge_spectrums = merge_spectrums, merge_height_prop = merge_height_prop, spectrum_dist_type = spectrum_dist_type, spectrum_cl_method = spectrum_cl_method,
-                                      return_css_only = return_seuratObj, verbose = verbose)
+                                      return_css_only = FALSE, verbose = verbose)
   if (return_seuratObj){
-    object[[reduction.name]] <- CreateDimReducObject(embeddings = css, key = reduction.key, assay = DefaultAssay(object))
+    object[[reduction.name]] <- CreateDimReducObject(embeddings = css$sim2profiles, key = reduction.key, assay = DefaultAssay(object), misc = list(model = css))
     return(object)
   } else{
     return(css)
