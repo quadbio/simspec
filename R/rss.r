@@ -1,17 +1,18 @@
 #'@param ref Expression matrix of the reference data set
 #'@param method Correlation method
+#'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
 #'@param scale If TRUE, z-transform is applied to the calculated similarities across reference samples
 #'@rdname ref_sim_spectrum
 #'@export
 #'@method ref_sim_spectrum default
-ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman"), scale = TRUE){
+ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman"), use_fast_rank = TRUE, scale = TRUE){
   method <- match.arg(method)
   
   candidates <- intersect(rownames(object), rownames(ref))
   if (method == "pearson"){
     corr <- qlcMatrix::corSparse(object[candidates,], ref[candidates,])
   } else if (method == "spearman"){
-    if (require(presto, quietly = T)){
+    if (require(presto, quietly = T) & use_fast_rank){
       ranked_data <- presto::rank_matrix(object[candidates,])$X_ranked
     } else{
       ranked_data <- rank_input_matrix(object[candidates,])

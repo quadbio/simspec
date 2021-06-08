@@ -11,6 +11,7 @@
 #'@param cluster_resolution Resolution of clustering. Ignore if cluster_method is not Seurat
 #'@param spectrum_type Method to normalize similarities. "corr_ztransform" uses z-transform; "corr_kernel" introduces correlation kernel to convert similarities to likelihood; "corr_raw" uses no normalization; "nnet" and "lasso" build probabilistic prediction model on the data and estimate likelihoods
 #'@param corr_method Type of correlation. Ignore if spectrum_type is "nnet" or "lasso"
+#'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
 #'@param lambda Lambda in the correlation kernel
 #'@param threads Number of threads to use. Only useful if spectrum_type is "lasso"
 #'@param train_on Type of data used to train the likelihood model. Only useful if spectrum_type is "nnet" or "lasso"
@@ -41,6 +42,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
                                          cluster_resolution = 0.6,
                                          spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"), # clustering and types of spectrum
                                          corr_method = c("spearman","pearson"),
+                                         use_fast_rank = TRUE,
                                          lambda = 50,
                                          threads = 1,  # spectrum related parameters
                                          train_on = c("raw","pseudo","rand"),
@@ -143,7 +145,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       if (corr_method == "pearson"){
         sims <- qlcMatrix::corSparse(data, Matrix(profiles))
       } else if (corr_method == "spearman"){
-        if (require(presto, quietly = T)){
+        if (require(presto, quietly = T) & use_fast_rank){
           ranked_data <- presto::rank_matrix(data)$X_ranked
         } else{
           ranked_data <- rank_input_matrix(data)
@@ -350,25 +352,27 @@ cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F,
 }
 
 #'@param model Calculation model of the reference CSS representation
+#'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
 #'@rdname css_project
 #'@export
 #'@method css_project default
 css_project.default <- function(object,
-                                model){
+                                model,
+                                use_fast_rank = TRUE){
   model <- model$model
-  object <- as.matrix(object)
   
   if (model$spectrum_type %in% c("corr_ztransform","corr_raw")){
     res <- do.call(cbind, lapply(model$profiles, function(ref)
-      ref_sim_spectrum.default(object, ref, method = model$args['corr_method'], scale = model$spectrum_type == "corr_ztransform")))
+      ref_sim_spectrum.default(object, ref, method = model$args['corr_method'], use_fast_rank = use_fast_rank, scale = model$spectrum_type == "corr_ztransform")))
     
   } else if (model$spectrum_type == "corr_kernel"){
     res <- do.call(cbind, lapply(model$profiles, function(ref){
-      sim <- ref_sim_spectrum.default(object, ref, method = model$args['corr_method'], scale = FALSE)
+      sim <- ref_sim_spectrum.default(object, ref, method = model$args['corr_method'], use_fast_rank = use_fast_rank, scale = FALSE)
       return(t(apply(exp(sim * model$args['lambda']) * exp(-model$args['lambda']), 1, function(x) x/sum(x))))
     }))
     
   } else if (model$spectrum_type %in% c("nnet","lasso")){
+    object <- as.matrix(object)
     res <- do.call(cbind, lapply(model$models, function(m){
       if (model$spectrum_type == "lasso"){
         require(glmnet)
@@ -391,10 +395,11 @@ css_project.default <- function(object,
 #'@method css_project Seurat
 css_project.Seurat <- function(object,
                                model,
+                               use_fast_rank = TRUE,
                                reduction.name = "css_proj",
                                reduction.key = "CSSPROJ_"){
   dat <- object@assays[[DefaultAssay(object)]]@data
-  css_proj <- css_project(dat, model)
+  css_proj <- css_project(dat, model, use_fast_rank = use_fast_rank)
   rownames(css_proj) <- colnames(object)
   object[[reduction.name]] <- CreateDimReducObject(css_proj, key = reduction.key, assay = DefaultAssay(object))
   return(object)
@@ -414,18 +419,23 @@ css_project.Seurat <- function(object,
 #'@return A vector of the predicted/transferred labels of the query data
 #'@export
 transfer_labels <- function(data_ref = NULL, data_query = NULL, knn_ref_query = NULL, label_ref, k = 50, thres_prop_match = 0.5){
-  require(RANN)
   if (is.null(knn_ref_query))
     knn_ref_query <- RANN::nn2(data_ref, data_query, k = k)$nn.idx
   if (! is.factor(label_ref))
     label_ref <- as.factor(label_ref)
   
-  proj_cl_num_query <- sapply(levels(label_ref), function(cl)
-    apply(knn_ref_query, 1, function(idx) sum(label_ref[idx] == cl)))
-  colnames(proj_cl_num_query) <- levels(label_ref)
+  knn_mat <- sparseMatrix(i = rep(1:nrow(knn_ref_query), ncol(knn_ref_query)),
+                          j = as.numeric(knn_ref_query),
+                          x = 1,
+                          dims = c(nrow(knn_ref_query), length(label_ref)))
+  label_ref_mat <- sparseMatrix(i = 1:length(label_ref),
+                                j = as.numeric(label_ref),
+                                dims = c(length(label_ref),length(levels(label_ref))), dimnames = list(names(label_ref),levels(label_ref)))
   
-  label_query_proj <- colnames(proj_cl_num_query)[apply(proj_cl_num_query, 1, which.max)]
-  label_query_proj[which(apply(proj_cl_num_query,1,max) < ncol(knn_ref_query) * thres_prop_match)] <- NA
+  knn_label_mat <- knn_mat %*% label_ref_mat
+  df_knn_label <- summary(knn_label_mat)
+  label_query_proj <- colnames(knn_label_mat)[sapply(split(df_knn_label, df_knn_label$i), function(x) ifelse(max(x$x) < sum(x$x) * thres_prop_match, NA, x$j[which.max(x$x)]) )]
+  
   return(label_query_proj)
 }
 

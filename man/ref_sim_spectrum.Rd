@@ -8,7 +8,13 @@
 \usage{
 ref_sim_spectrum(object, ...)
 
-\method{ref_sim_spectrum}{default}(object, ref, method = c("pearson", "spearman"), scale = TRUE)
+\method{ref_sim_spectrum}{default}(
+  object,
+  ref,
+  method = c("pearson", "spearman"),
+  use_fast_rank = TRUE,
+  scale = TRUE
+)
 
 \method{ref_sim_spectrum}{Seurat}(
   object,
@@ -24,6 +30,8 @@ ref_sim_spectrum(object, ...)
 \item{ref}{Expression matrix of the reference data set}
 
 \item{method}{Correlation method}
+
+\item{use_fast_rank}{When the presto package is available, use its rank_matrix function to rank sparse matrix}
 
 \item{scale}{If TRUE, z-transform is applied to the calculated similarities across reference samples}
 

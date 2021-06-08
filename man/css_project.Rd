@@ -6,11 +6,12 @@
 \alias{css_project}
 \title{Prject data to the CSS representation using the given calculation model}
 \usage{
-\method{css_project}{default}(object, model)
+\method{css_project}{default}(object, model, use_fast_rank = TRUE)
 
 \method{css_project}{Seurat}(
   object,
   model,
+  use_fast_rank = TRUE,
   reduction.name = "css_proj",
   reduction.key = "CSSPROJ_"
 )
@@ -21,6 +22,8 @@ css_project(object, ...)
 \item{object}{An object}
 
 \item{model}{Calculation model of the reference CSS representation}
+
+\item{use_fast_rank}{When the presto package is available, use its rank_matrix function to rank sparse matrix}
 
 \item{reduction.name}{Reduction name of the projected CSS representation in the returned Seurat object}
 

@@ -21,6 +21,7 @@
   cluster_resolution = 0.6,
   spectrum_type = c("corr_ztransform", "corr_kernel", "corr_raw", "nnet", "lasso"),
   corr_method = c("spearman", "pearson"),
+  use_fast_rank = TRUE,
   lambda = 50,
   threads = 1,
   train_on = c("raw", "pseudo", "rand"),
@@ -96,6 +97,8 @@ cluster_sim_spectrum(object, ...)
 \item{spectrum_type}{Method to normalize similarities. "corr_ztransform" uses z-transform; "corr_kernel" introduces correlation kernel to convert similarities to likelihood; "corr_raw" uses no normalization; "nnet" and "lasso" build probabilistic prediction model on the data and estimate likelihoods}
 
 \item{corr_method}{Type of correlation. Ignore if spectrum_type is "nnet" or "lasso"}
+
+\item{use_fast_rank}{When the presto package is available, use its rank_matrix function to rank sparse matrix}
 
 \item{lambda}{Lambda in the correlation kernel}
 
