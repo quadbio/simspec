@@ -430,10 +430,11 @@ transfer_labels <- function(data_ref = NULL, data_query = NULL, knn_ref_query = 
                           dims = c(nrow(knn_ref_query), length(label_ref)))
   label_ref_mat <- sparseMatrix(i = 1:length(label_ref),
                                 j = as.numeric(label_ref),
+                                x = 1,
                                 dims = c(length(label_ref),length(levels(label_ref))), dimnames = list(names(label_ref),levels(label_ref)))
   
   knn_label_mat <- knn_mat %*% label_ref_mat
-  df_knn_label <- summary(knn_label_mat)
+  df_knn_label <- Matrix::summary(knn_label_mat)
   label_query_proj <- colnames(knn_label_mat)[sapply(split(df_knn_label, df_knn_label$i), function(x) ifelse(max(x$x) < sum(x$x) * thres_prop_match, NA, x$j[which.max(x$x)]) )]
   
   return(label_query_proj)
