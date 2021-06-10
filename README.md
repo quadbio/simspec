@@ -1,5 +1,10 @@
 # simspec: Similarity Spectrum
-An R package to calculate representation of cells in single-cell genomic data, by their similarities to external references (RSS) or cell clusters in the data (CSS)
+An R package to calculate representation of cells in single-cell genomic data, by their similarities to external references (RSS) or cell clusters in the data (CSS). More details of the method are available in the paper **[CSS: cluster similarity spectrum integration of single-cell genomics data](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02147-4)**. The manscript is also available in [biorxiv](https://doi.org/10.1101/2020.02.27.968560).
+
+Recent update
+------
+1. Sparse matrix ranking for Spearman correlation coefficient to speed up calculation and avoid conversion to dense matrix
+2. Faster kNN-based label projection
 
 Installation
 ------
@@ -12,7 +17,7 @@ Usage
 ------
 The more detailed vignette can be seen in https://github.com/quadbiolab/simspec/blob/master/vignette/vignette.md.
 
-The codes to generate resulted reported in the manuscript (https://doi.org/10.1101/2020.02.27.968560) are deposited in https://github.com/quadbiolab/simspec/blob/master/code_repository/. Data can be retrieved from Mendeley Data (http://doi.org/10.17632/3kthhpw2pd).
+The codes to generate resulted reported in the paper are deposited in https://github.com/quadbiolab/simspec/blob/master/code_repository/. Data can be retrieved from Mendeley Data (http://doi.org/10.17632/3kthhpw2pd).
 
 ### Reference Similarity Spectrum (RSS)
 To calculate RSS, two inputs are required
