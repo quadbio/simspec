@@ -2,7 +2,6 @@
 #'@param return_rotation Whether to return the rotation matrix 
 #'
 #'@rdname run_PCA
-#'@export
 #'@method run_PCA default
 run_PCA.default <- function(object,
                             npcs = 50,
@@ -26,7 +25,6 @@ run_PCA.default <- function(object,
 #'@param reduction.name Name of the returned reduction
 #'@param reduction.key Key of the returned reduction
 #'@rdname run_PCA
-#'@export
 #'@method run_PCA Seurat
 run_PCA.Seurat <- function(object,
                            reduction,

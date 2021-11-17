@@ -26,7 +26,6 @@
 #'@param verbose If TRUE, progress message is provided
 #'
 #'@rdname cluster_sim_spectrum
-#'@export
 #'@method cluster_sim_spectrum default
 cluster_sim_spectrum.default <- function(object, # expression matrix
                                          dr = NULL,
@@ -306,7 +305,6 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
 #'@param reduction.key Reduction key of the CSS representation in the returned Seurat object
 #'@param return_seuratObj If TRUE, a Seurat object with CSS added as one dimension reduction representation is returned. Otherwise, a list with CSS matrix and the calculation model is returned
 #'@rdname cluster_sim_spectrum
-#'@export
 #'@method cluster_sim_spectrum Seurat
 cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F, use_dr = "pca", dims_use = 1:20,
                                         label_tag, redo_pca = FALSE, redo_pca_with_data = FALSE, k = 20, min_batch_size = k*2, ...,
@@ -354,7 +352,6 @@ cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F,
 #'@param model Calculation model of the reference CSS representation
 #'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
 #'@rdname css_project
-#'@export
 #'@method css_project default
 css_project.default <- function(object,
                                 model,
@@ -391,7 +388,6 @@ css_project.default <- function(object,
 #'@param reduction.name Reduction name of the projected CSS representation in the returned Seurat object
 #'@param reduction.key Reduction key of the projected CSS representation in the returned Seurat object
 #'@rdname css_project
-#'@export
 #'@method css_project Seurat
 css_project.Seurat <- function(object,
                                model,

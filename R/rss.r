@@ -3,7 +3,6 @@
 #'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
 #'@param scale If TRUE, z-transform is applied to the calculated similarities across reference samples
 #'@rdname ref_sim_spectrum
-#'@export
 #'@method ref_sim_spectrum default
 ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman"), use_fast_rank = TRUE, scale = TRUE){
   method <- match.arg(method)
@@ -29,7 +28,6 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
 #'@param reduction.name Reduction name of thea RSS representation in the returned Seurat object
 #'@param reduction.key Reduction key of the RSS representation in the returned Seurat object
 #'@rdname ref_sim_spectrum
-#'@export
 #'@method ref_sim_spectrum Seurat
 ref_sim_spectrum.Seurat <- function(object, ref, ..., reduction.name = "rss", reduction.key = "RSS_"){
   input <- object@assays[[DefaultAssay(object)]]@data
