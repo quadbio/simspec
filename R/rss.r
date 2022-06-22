@@ -29,11 +29,15 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
 #'@param reduction.key Reduction key of the RSS representation in the returned Seurat object
 #'@rdname ref_sim_spectrum
 #'@method ref_sim_spectrum Seurat
-ref_sim_spectrum.Seurat <- function(object, ref, ..., reduction.name = "rss", reduction.key = "RSS_"){
+ref_sim_spectrum.Seurat <- function(object, ref, ..., as_assay = FALSE, assay.name = "rss", reduction.name = "rss", reduction.key = "RSS_"){
   input <- object@assays[[DefaultAssay(object)]]@data
   rss <- ref_sim_spectrum.default(input, ref, ...)
-  colnames(rss) <- NULL
-  object[[reduction.name]] <- CreateDimReducObject(rss, key = reduction.key, assay = DefaultAssay(object))
+  if (as_assay){
+    object[[assay.name]] <- CreateAssayObject(data = t(rss))
+  } else{
+    colnames(rss) <- NULL
+    object[[reduction.name]] <- CreateDimReducObject(rss, key = reduction.key, assay = DefaultAssay(object))
+  }
   return(object)
 }
 
