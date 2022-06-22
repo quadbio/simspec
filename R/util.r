@@ -35,7 +35,7 @@ build_knn_graph <- function(data,
     nn <- RANN::nn2(t(data), t(data), k = k+1)$nn.idx[,-1]
   }
   if (verbose)
-    cat("found nearest neighbors.\n")
+    message("build_knn_graph: found nearest neighbors.")
   
   i <- rep(1:nrow(nn), each = ncol(nn))
   j <- as.integer(t(nn))
@@ -43,11 +43,11 @@ build_knn_graph <- function(data,
   
   if(use_seurat_snn & require(Seurat)){
     if (verbose)
-      cat("revoke Seurat to compute SNN.\n")
+      message("build_knn_graph: revoke Seurat to compute SNN.")
     
     adj <- .Call('_Seurat_ComputeSNN', PACKAGE = 'Seurat', nn, jaccard_prune)
     if (verbose)
-      cat("done.\n")
+      message("build_knn_graph: done.")
     
   } else{
     if (mutual){
@@ -57,11 +57,11 @@ build_knn_graph <- function(data,
       adj <- Matrix::sparseMatrix(i = adj@i, p = adj@p, dims = adj@Dim, index1 = FALSE) + 0
     }
     if (verbose)
-      cat("got adjacent matrix.\n")
+      message("build_knn_graph: got adjacent matrix.")
     
     if (jaccard_prune > 0 & jaccard_weighted){
       if (verbose)
-        cat("start calculating Jaccard indices...\n")
+        message("build_knn_graph: start calculating Jaccard indices...")
       nonzero_idx <- summary(adj)[,1:2]
       
       adj_intersect <- summary(adj * (adj %*% t(adj)))
@@ -71,13 +71,13 @@ build_knn_graph <- function(data,
       remained <- which(jaccard >= jaccard_prune)
       adj <- Matrix::sparseMatrix(i = nonzero_idx[remained,1], j = nonzero_idx[remained,2], x = jaccard[remained], dims = c(nrow(nn), nrow(nn))) + 0
       if (verbose)
-        cat("done pruning.\n")
+        message("build_knn_graph: done pruning.")
     }
   }
   adj@Dimnames <- list(colnames(data), colnames(data))
   
   if (verbose)
-    cat("done. returning result...\n")
+    message("build_knn_graph: done and returning result...")
   if (return_igraph) return(igraph::graph_from_adjacency_matrix(adj, mode = "undirected"))
   return(adj)
 }

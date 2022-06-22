@@ -94,7 +94,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       dr_x <- dr_x[,1:num_pcs_use]
       rownames(dr_x) <- colnames(data)[idx]
     }
-    knn <- build_knn_graph(t(dr_x), k = k, ..., verbose = verbose)
+    knn <- build_knn_graph(t(dr_x), k = k, ..., verbose = verbose > 1)
     rownames(knn) <- colnames(data)[idx]
     colnames(knn) <- colnames(data)[idx]
     
@@ -145,10 +145,10 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     })
     names(cl_profiles) <- batches
     if (verbose)
-      cat("Obtained average profiles of clusters.\n")
+      message("Obtained average profiles of clusters.")
     
     if (verbose)
-      cat("Start to calculate standardized similarities to clusters...\n")
+      message("Start to calculate standardized similarities to clusters...")
     sim2profiles <- lapply(cl_profiles, function(profiles){
       if (corr_method == "pearson"){
         sims <- qlcMatrix::corSparse(data, Matrix(profiles))
@@ -165,18 +165,18 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     
     if (spectrum_type == "corr_ztransform"){
       if (verbose)
-        cat("Doing z-transformation...\n")
+        message("Doing z-transformation...")
       sim2profiles <- lapply(sim2profiles, function(sim)
         t(scale(t(sim))))
     } else if (spectrum_type == "corr_kernel"){
       if (verbose)
-        cat("Doing kernel transformation...\n")
+        message("Doing kernel transformation...")
       sim2profiles <- lapply(sim2profiles, function(sim)
         t(apply(exp(sim * lambda) * exp(-lambda), 1, function(x) x/sum(x))))
     }
   } else if (spectrum_type %in% c("nnet","lasso")){
     if (verbose)
-      cat("Start to build multinomial logistic regression models...\n")
+      message("Start to build multinomial logistic regression models...")
     
     models <- lapply(batches, function(x){
       idx_x <- which(labels == x)
@@ -193,14 +193,14 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
         train_x <- as.matrix(do.call(rbind, lapply(sel_idx, function(idx) t(data[,idx]))))
         train_y <- as.factor(rep(levels(cl_x), sapply(sel_idx, length)))
         if (verbose)
-          cat(paste0(">> Randomly selected cells for model training: sample ", x, ".\n"))
+          message(paste0("  Randomly selected cells for model training: sample ", x, "."))
         
       } else if (train_on == "pseudo"){
         pseudo_idx <- lapply(levels(cl_x), function(cl_this){
           cl_idx <- idx_x[cl_x == cl_this]
           knn_cl <- build_knn_graph(t(dr[cl_idx,]), k = k_pseudo,
                                     use_seurat_snn = F, mutual = F, jaccard_weighted = F, jaccard_prune = 0,
-                                    ..., verbose = F)
+                                    ..., verbose = verbose > 1)
           pseudo_idx <- construct_pseudocells(knn_cl, ratio = downsample_ratio, min_seed_num = 2)
           return(pseudo_idx)
         })
@@ -213,11 +213,11 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
         }))
         train_y <- rep(levels(cl_x), sapply(pseudo_idx, function(idx) length(unique(idx[idx[,2]!=-1,2]))))
         if (verbose)
-          cat(paste0(">> Constructed pseudocells for training: sample ", x, ".\n"))
+          message(paste0("  Constructed pseudocells for training: sample ", x, "."))
       }
       idx <- which(train_y %in% unique(train_y)[sapply(unique(train_y), function(x) sum(train_y == x)) > 2])
       if (verbose & length(idx) != length(train_y))
-        cat(paste0(">> Dropped clusters ",unique(train_y[-idx]), " in sample ", x, " due to too few training data.\n"))
+        message(paste0("  Dropped clusters ",unique(train_y[-idx]), " in sample ", x, " due to too few training data."))
       train_x <- train_x[idx,]
       train_y <- train_y[idx]
       
@@ -234,12 +234,12 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
         m <- glmnet::cv.glmnet(x = train_x, y = train_y, family = "multinomial", alpha = 1)
       }
       if (verbose)
-        cat(paste0(">> Model trained for sample ", x, ".\n"))
+        message(paste0("  Model trained for sample ", x, "."))
       return(m)
     })
     names(models) <- batches
     if (verbose)
-      cat("Models trained, start to produce likelihood spectrum...\n")
+      message("Models trained, start to produce likelihood spectrum...")
     
     sim2profiles <- lapply(models, function(m){
       if (spectrum_type == "lasso"){
@@ -256,14 +256,14 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       })
     
     if (verbose)
-      cat("Done likelihood estimation.\n")
+      message("Done likelihood estimation.")
   }
   
   sim2profiles <- do.call(cbind, sim2profiles)
   sim2profiles_raw <- sim2profiles
   if (merge_spectrums){
     if (verbose)
-      cat("Start to merge similar spectrums...\n")
+      message("Start to merge similar spectrums...")
     
     dist_css <- NULL
     if (spectrum_dist_type == "pearson"){
@@ -284,7 +284,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   colnames(sim2profiles) <- paste0("CSS_", 1:ncol(sim2profiles))
   
   if (verbose)
-    cat("Done.\n")
+    message("Done.")
   
   if (return_css_only)
     return(sim2profiles)
