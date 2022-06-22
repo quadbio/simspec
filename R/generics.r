@@ -33,7 +33,7 @@ css_project <- function(object, ...) {
 #'@rdname ref_sim_spectrum
 #'@export ref_sim_spectrum
 ref_sim_spectrum <- function(object, ...){
-	UseMethod(generic = 'ref_sim_spectrum', object = object)
+  UseMethod(generic = 'ref_sim_spectrum', object = object)
 }
 
 #' Principal component analysis on dimension reduced data
