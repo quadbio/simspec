@@ -1,8 +1,10 @@
+#'@import Matrix
 #'@param ref Expression matrix of the reference data set
 #'@param method Correlation method
 #'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
 #'@param scale If TRUE, z-transform is applied to the calculated similarities across reference samples
 #'@rdname ref_sim_spectrum
+#'@export
 #'@method ref_sim_spectrum default
 ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman"), use_fast_rank = TRUE, scale = TRUE){
   method <- match.arg(method)
@@ -25,15 +27,20 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
   return(corr)
 }
 
-
-
 #'@param as_assay When it is TRUE, the output is returned as an Assay object in the Seurat object
 #'@param assay.name Assay name of the RSS representation in the returned Seurat object
 #'@param reduction.name Reduction name of the RSS representation in the returned Seurat object
 #'@param reduction.key Reduction key of the RSS representation in the returned Seurat object
 #'@rdname ref_sim_spectrum
+#'@export
 #'@method ref_sim_spectrum Seurat
-ref_sim_spectrum.Seurat <- function(object, ref, as_assay = FALSE, assay.name = "rss", reduction.name = "rss", reduction.key = "RSS_", ...){
+ref_sim_spectrum.Seurat <- function(object,
+                                    ref,
+                                    as_assay = FALSE,
+                                    assay.name = "rss",
+                                    reduction.name = "rss",
+                                    reduction.key = "RSS_",
+                                    ...){
   input <- object@assays[[DefaultAssay(object)]]@data
   rss <- ref_sim_spectrum.default(input, ref, ...)
   if (as_assay){

@@ -19,11 +19,11 @@ ref_sim_spectrum(object, ...)
 \method{ref_sim_spectrum}{Seurat}(
   object,
   ref,
-  ...,
   as_assay = FALSE,
   assay.name = "rss",
   reduction.name = "rss",
-  reduction.key = "RSS_"
+  reduction.key = "RSS_",
+  ...
 )
 }
 \arguments{

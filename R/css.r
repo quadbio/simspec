@@ -1,3 +1,4 @@
+#'@import Matrix
 #'@param dr Dimension reduction matrix used for clustering. When it is NULL, truncated PCA is run on the expression matrix for dimension reduction
 #'@param dr_input Alternative expression matrix used for dimension reduction. Ignore if dr is specified
 #'@param num_pcs_compute Number of PCs to calculate. Ignore if dr is specified
@@ -26,6 +27,7 @@
 #'@param verbose If TRUE, progress message is provided
 #'
 #'@rdname cluster_sim_spectrum
+#'@export
 #'@method cluster_sim_spectrum default
 cluster_sim_spectrum.default <- function(object, # expression matrix
                                          dr = NULL,
@@ -65,7 +67,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   
   if (is.null(dr)){
     if (verbose)
-      cat("No dimension reduction is provided. Start to do truncated PCA...\n")
+      message("No dimension reduction is provided. Start to do truncated PCA...")
     
     t_pca <- irlba::irlba(t(dr_input), nv = num_pcs_compute)
     dr <- t_pca$u %*% diag(t_pca$d)
@@ -77,7 +79,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   }
   
   if (verbose)
-    cat("Start to do clustering for each sample...\n")
+    message("Start to do clustering for each sample...")
   labels <- as.factor(labels)
   batches <- names(which(table(labels) >= min_batch_size))
   
@@ -86,7 +88,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     dr_x <- dr[idx,]
     if (redo_pca){
       if (verbose)
-        cat(paste0(">> Redoing truncated PCA on sample ", x, "...\n"))
+        message(paste0("  Redoing truncated PCA on sample ", x, "..."))
       t_pca <- irlba::irlba(t(dr_input[,idx]), nv = num_pcs_compute)
       dr_x <- t_pca$u %*% diag(t_pca$d)
       dr_x <- dr_x[,1:num_pcs_use]
@@ -97,7 +99,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     colnames(knn) <- colnames(data)[idx]
     
     if (cluster_method == "Seurat" & require(Seurat)){
-      cl <- Seurat::FindClusters(Seurat::as.Graph(knn), resolution = cluster_resolution, verbose = verbose)[,1]
+      cl <- Seurat::FindClusters(Seurat::as.Graph(knn), resolution = cluster_resolution, verbose = verbose > 1)[,1]
     } else if (require(igraph)){
       graph <- igraph::graph_from_adjacency_matrix(knn, mode = "undirected", weighted = T)
       cl <- igraph::walktrap.community(graph)
@@ -107,13 +109,20 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     }
     
     if (verbose)
-      cat(paste0(">> Done clustering of sample ", x, ".\n"))
+      message(paste0("  Done clustering of sample ", x, "."))
     return(cl)
   })
   names(cl) <- batches
   if (verbose)
-    cat("Finished clustering.\n")
+    message("Finished clustering.")
   
+  idx_toofew_cl_batches <- which(sapply(cl, function(x) length(levels(x)) <= 2))
+  if (length(idx_toofew_cl_batches) > 0){
+    if (verbose)
+      message(paste0("The following batch(es) have no more than two clusters and are removed from the ref: ", paste(batches[idx_toofew_cl_batches], collapse=", ")))
+    batches <- batches[-idx_toofew_cl_batches]
+    cl <- cl[-idx_toofew_cl_batches]
+  }
   
   if (spectrum_type == "nnet"){
     if (! require(nnet)){
@@ -305,15 +314,35 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
 #'@param reduction.key Reduction key of the CSS representation in the returned Seurat object
 #'@param return_seuratObj If TRUE, a Seurat object with CSS added as one dimension reduction representation is returned. Otherwise, a list with CSS matrix and the calculation model is returned
 #'@rdname cluster_sim_spectrum
+#'@export
 #'@method cluster_sim_spectrum Seurat
-cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F, use_dr = "pca", dims_use = 1:20,
-                                        label_tag, redo_pca = FALSE, redo_pca_with_data = FALSE, k = 20, min_batch_size = k*2, ...,
-                                        cluster_resolution = 0.6, spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"),
-                                        corr_method = c("spearman","pearson"), lambda = 50, threads = 1,
-                                        train_on = c("raw","pseudo","rand"), downsample_ratio = 1/10, k_pseudo = 10, logscale_likelihood = F,
-                                        merge_spectrums = FALSE, merge_height_prop = 1/10, spectrum_dist_type = c("pearson", "euclidean"), spectrum_cl_method = "complete",
-                                        reduction.name = "css", reduction.key = "CSS_",
-                                        return_seuratObj = T, verbose = T){
+cluster_sim_spectrum.Seurat <- function(object,
+                                        var_genes = NULL,
+                                        use_scale = F,
+                                        use_dr = "pca",
+                                        dims_use = 1:20,
+                                        label_tag,
+                                        redo_pca = FALSE,
+                                        redo_pca_with_data = FALSE,
+                                        k = 20, min_batch_size = k*2,
+                                        ...,
+                                        cluster_resolution = 0.6,
+                                        spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"),
+                                        corr_method = c("spearman","pearson"),
+                                        lambda = 50,
+                                        threads = 1,
+                                        train_on = c("raw","pseudo","rand"),
+                                        downsample_ratio = 1/10,
+                                        k_pseudo = 10,
+                                        logscale_likelihood = F,
+                                        merge_spectrums = FALSE,
+                                        merge_height_prop = 1/10,
+                                        spectrum_dist_type = c("pearson", "euclidean"),
+                                        spectrum_cl_method = "complete",
+                                        reduction.name = "css",
+                                        reduction.key = "CSS_",
+                                        return_seuratObj = T,
+                                        verbose = T){
   spectrum_type <- match.arg(spectrum_type)
   corr_method <- match.arg(corr_method)
   train_on <- match.arg(train_on)
@@ -352,6 +381,7 @@ cluster_sim_spectrum.Seurat <- function(object, var_genes = NULL, use_scale = F,
 #'@param model Calculation model of the reference CSS representation
 #'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
 #'@rdname css_project
+#'@export
 #'@method css_project default
 css_project.default <- function(object,
                                 model,
@@ -388,6 +418,7 @@ css_project.default <- function(object,
 #'@param reduction.name Reduction name of the projected CSS representation in the returned Seurat object
 #'@param reduction.key Reduction key of the projected CSS representation in the returned Seurat object
 #'@rdname css_project
+#'@export
 #'@method css_project Seurat
 css_project.Seurat <- function(object,
                                model,

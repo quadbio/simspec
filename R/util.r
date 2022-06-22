@@ -2,6 +2,7 @@
 #'
 #' Calculate the kNN-network given a data matrix
 #'
+#'@import Matrix
 #'@param data The data matrix
 #'@param k The number of neighbors
 #'@param dist_type The type of distance. Should be one of "euclidean", "pearson" and "raw"
@@ -86,6 +87,7 @@ build_knn_graph <- function(data,
 #' This function implements the procedure to average the expression profiles
 #' of similar cells in order to construct pseudocells
 #'
+#'@import Matrix
 #'@param knn_adj The adjacent matrix of the kNN network
 #'@param ratio The downsample rate
 #'@param init_dist Maximal distance on the kNN netowkr to group a cell to the selected capital or pseudocell center
@@ -128,6 +130,7 @@ construct_pseudocells <- function(knn_adj,
 #' 
 #' This function convert a non-negative matrix into a column-ranked matrix
 #' 
+#' @import Matrix
 #' @param mat The input matrix, can be dense or sparse
 #' @return A matrix, whose dense/sparse is the same as the input, with each column ranked
 #' @export
