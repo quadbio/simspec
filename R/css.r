@@ -153,7 +153,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       if (corr_method == "pearson"){
         sims <- qlcMatrix::corSparse(data, Matrix(profiles))
       } else if (corr_method == "spearman"){
-        if (require(presto, quietly = T) & use_fast_rank){
+        if (use_fast_rank && requireNamespace("presto", quietly=T)){
           ranked_data <- presto::rank_matrix(data)$X_ranked
         } else{
           ranked_data <- rank_input_matrix(data)
