@@ -9,7 +9,6 @@ run_PCA.default <- function(object,
                             npcs = 50,
                             return_rotation = F)
 {
-  require(irlba)
   t_pca <- irlba::irlba(object, nv = npcs)
   rotation <- t_pca$v
   rownames(rotation) <- colnames(object)

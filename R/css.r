@@ -100,9 +100,9 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     rownames(knn) <- colnames(data)[idx]
     colnames(knn) <- colnames(data)[idx]
     
-    if (cluster_method == "Seurat" & require(Seurat)){
+    if (cluster_method == "Seurat" && requireNamespace("Seurat", quietly=T)){
       cl <- Seurat::FindClusters(Seurat::as.Graph(knn), resolution = cluster_resolution, verbose = verbose > 1)[,1]
-    } else if (require(igraph)){
+    } else if (requireNamespace("igraph", quietly=T)){
       graph <- igraph::graph_from_adjacency_matrix(knn, mode = "undirected", weighted = T)
       cl <- igraph::walktrap.community(graph)
       cl <- as.factor(setNames(cl$membership, cl$names)[rownames(knn)])
@@ -127,12 +127,12 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   }
   
   if (spectrum_type == "nnet"){
-    if (! require(nnet)){
+    if (! requireNamespace("nnet", quietly=T)){
       warning("cannot find package nnet, switch spectrum type to corr_ztransform")
       spectrum_type <- "corr_ztransform"
     }
   } else if (spectrum_type == "lasso"){
-    if (! require(glmnet)){
+    if (! requireNamespace("glmnet", quietly=T)){
       warning("cannot find package glmnet, switch spectrum type to corr_ztransform")
       spectrum_type <- "corr_ztransform"
     }
@@ -404,10 +404,10 @@ css_project.default <- function(object,
     object <- as.matrix(object)
     res <- do.call(cbind, lapply(model$models, function(m){
       if (model$spectrum_type == "lasso"){
-        require(glmnet)
+        require(glmnet, quietly=T)
         pred <- predict(m, t(object), type = "response")[,,1]
       } else if (model$spectrum_type == "nnet"){
-        require(nnet)
+        require(nnet, quietly=T)
         pred <- predict(m, data.frame(t(object)), "probs")
       }
       return(pred)
