@@ -32,6 +32,7 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
 ref_sim_spectrum.Seurat <- function(object, ref, ..., reduction.name = "rss", reduction.key = "RSS_"){
   input <- object@assays[[DefaultAssay(object)]]@data
   rss <- ref_sim_spectrum.default(input, ref, ...)
+  colnames(rss) <- NULL
   object[[reduction.name]] <- CreateDimReducObject(rss, key = reduction.key, assay = DefaultAssay(object))
   return(object)
 }
