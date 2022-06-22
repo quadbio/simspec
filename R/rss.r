@@ -25,7 +25,9 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
   return(corr)
 }
 
-#'@param reduction.name Reduction name of thea RSS representation in the returned Seurat object
+#'@param as_assay When it is TRUE, the output is returned as an Assay object in the Seurat object
+#'@param assay.name Assay name of the RSS representation in the returned Seurat object
+#'@param reduction.name Reduction name of the RSS representation in the returned Seurat object
 #'@param reduction.key Reduction key of the RSS representation in the returned Seurat object
 #'@rdname ref_sim_spectrum
 #'@method ref_sim_spectrum Seurat

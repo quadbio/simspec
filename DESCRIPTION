@@ -27,4 +27,4 @@ Imports:
     RANN,
     qlcMatrix (>= 0.9.4),
 Suggests:
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2

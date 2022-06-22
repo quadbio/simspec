@@ -20,6 +20,8 @@ ref_sim_spectrum(object, ...)
   object,
   ref,
   ...,
+  as_assay = FALSE,
+  assay.name = "rss",
   reduction.name = "rss",
   reduction.key = "RSS_"
 )
@@ -35,7 +37,11 @@ ref_sim_spectrum(object, ...)
 
 \item{scale}{If TRUE, z-transform is applied to the calculated similarities across reference samples}
 
-\item{reduction.name}{Reduction name of thea RSS representation in the returned Seurat object}
+\item{as_assay}{When it is TRUE, the output is returned as an Assay object in the Seurat object}
+
+\item{assay.name}{Assay name of the RSS representation in the returned Seurat object}
+
+\item{reduction.name}{Reduction name of the RSS representation in the returned Seurat object}
 
 \item{reduction.key}{Reduction key of the RSS representation in the returned Seurat object}
 }
