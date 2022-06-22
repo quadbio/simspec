@@ -19,6 +19,7 @@
   ...,
   cluster_method = c("Seurat", "walktrap"),
   cluster_resolution = 0.6,
+  min_cluster_num = 3,
   spectrum_type = c("corr_ztransform", "corr_kernel", "corr_raw", "nnet", "lasso"),
   corr_method = c("spearman", "pearson"),
   use_fast_rank = TRUE,
@@ -93,6 +94,8 @@ cluster_sim_spectrum(object, ...)
 \item{cluster_method}{Method used to apply clustering to the kNN network. By default it calls FindClusters in Seurat using Louvain method. Alternative method is the walktrap community identification algorithm in igraph}
 
 \item{cluster_resolution}{Resolution of clustering. Ignore if cluster_method is not Seurat}
+
+\item{min_cluster_num}{The minimal number of clusters to include a sample in the ref profile (default=3)}
 
 \item{spectrum_type}{Method to normalize similarities. "corr_ztransform" uses z-transform; "corr_kernel" introduces correlation kernel to convert similarities to likelihood; "corr_raw" uses no normalization; "nnet" and "lasso" build probabilistic prediction model on the data and estimate likelihoods}
 

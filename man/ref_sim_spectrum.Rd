@@ -20,7 +20,7 @@ ref_sim_spectrum(object, ...)
   object,
   ref,
   as_assay = FALSE,
-  assay.name = "rss",
+  assay.name = "RSS",
   reduction.name = "rss",
   reduction.key = "RSS_",
   ...

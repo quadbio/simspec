@@ -10,6 +10,7 @@
 #'@param ... Other parameters to build_knn_graph
 #'@param cluster_method Method used to apply clustering to the kNN network. By default it calls FindClusters in Seurat using Louvain method. Alternative method is the walktrap community identification algorithm in igraph
 #'@param cluster_resolution Resolution of clustering. Ignore if cluster_method is not Seurat
+#'@param min_cluster_num The minimal number of clusters to include a sample in the ref profile (default=3)
 #'@param spectrum_type Method to normalize similarities. "corr_ztransform" uses z-transform; "corr_kernel" introduces correlation kernel to convert similarities to likelihood; "corr_raw" uses no normalization; "nnet" and "lasso" build probabilistic prediction model on the data and estimate likelihoods
 #'@param corr_method Type of correlation. Ignore if spectrum_type is "nnet" or "lasso"
 #'@param use_fast_rank When the presto package is available, use its rank_matrix function to rank sparse matrix
@@ -41,6 +42,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
                                          ..., # how to separate samples and whether or not to do DR separately
                                          cluster_method = c("Seurat","walktrap"),
                                          cluster_resolution = 0.6,
+                                         min_cluster_num = 3,
                                          spectrum_type = c("corr_ztransform","corr_kernel","corr_raw","nnet","lasso"), # clustering and types of spectrum
                                          corr_method = c("spearman","pearson"),
                                          use_fast_rank = TRUE,
@@ -116,10 +118,10 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   if (verbose)
     message("Finished clustering.")
   
-  idx_toofew_cl_batches <- which(sapply(cl, function(x) length(levels(x)) <= 2))
+  idx_toofew_cl_batches <- which(sapply(cl, function(x) length(levels(x)) < min_cluster_num))
   if (length(idx_toofew_cl_batches) > 0){
     if (verbose)
-      message(paste0("The following batch(es) have no more than two clusters and are removed from the ref: ", paste(batches[idx_toofew_cl_batches], collapse=", ")))
+      message(paste0("The following batch(es) have < ",min_cluster_num," clusters and are removed from the ref: ", paste(batches[idx_toofew_cl_batches], collapse=", ")))
     batches <- batches[-idx_toofew_cl_batches]
     cl <- cl[-idx_toofew_cl_batches]
   }
