@@ -37,7 +37,7 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
 ref_sim_spectrum.Seurat <- function(object,
                                     ref,
                                     as_assay = FALSE,
-                                    assay.name = "rss",
+                                    assay.name = "RSS",
                                     reduction.name = "rss",
                                     reduction.key = "RSS_",
                                     ...){
