@@ -3,6 +3,12 @@ An R package to calculate representation of cells in single-cell genomic data, b
 
 Recent update
 ------
+(220622)
+1. Add `min_cluster_num` parameter to `cluster_sim_spectrum` function to exclude samples with too few clusters from the ref profiles
+2. Support `ref_sim_spectrum` function to output as a new assay in the Seurat object
+3. Update verbose message
+
+(211124)
 1. Sparse matrix ranking for Spearman correlation coefficient to speed up calculation and avoid conversion to dense matrix
 2. Faster kNN-based label projection
 
