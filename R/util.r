@@ -150,3 +150,19 @@ rank_input_matrix <- function(mat){
   }
   return(ranked_mat)
 }
+
+#' Normalize each row of the given matrix to be sum of 1
+#'
+#' This function normalizes the given matrix in a row-wise manner so that
+#' the sum of every row is one
+#'
+#' @import Matrix
+#' @param mat The input matrix
+#' @return The normalized matrix
+rowNorm <- function(mat){
+  diag_mat <- Diagonal(x = 1/rowSums(mat))
+  res <- diag_mat %*% mat
+  dimnames(res) <- dimnames(mat)
+  return(res)
+}
+
