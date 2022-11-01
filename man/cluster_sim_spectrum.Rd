@@ -8,11 +8,12 @@
 \usage{
 \method{cluster_sim_spectrum}{default}(
   object,
+  labels,
+  cluster_labels = NULL,
   dr = NULL,
   dr_input = NULL,
   num_pcs_compute = 50,
   num_pcs_use = 20,
-  labels,
   redo_pca = FALSE,
   k = 20,
   min_batch_size = k * 2,
@@ -39,11 +40,12 @@
 
 \method{cluster_sim_spectrum}{Seurat}(
   object,
+  label_tag,
+  cluster_col = NULL,
   var_genes = NULL,
   use_scale = F,
   use_dr = "pca",
   dims_use = 1:20,
-  label_tag,
   redo_pca = FALSE,
   redo_pca_with_data = FALSE,
   k = 20,
@@ -73,6 +75,10 @@ cluster_sim_spectrum(object, ...)
 \arguments{
 \item{object}{An object}
 
+\item{labels}{Labels specifying different samples}
+
+\item{cluster_labels}{Use the provided clustering results instead of doing clustering per sample}
+
 \item{dr}{Dimension reduction matrix used for clustering. When it is NULL, truncated PCA is run on the expression matrix for dimension reduction}
 
 \item{dr_input}{Alternative expression matrix used for dimension reduction. Ignore if dr is specified}
@@ -80,8 +86,6 @@ cluster_sim_spectrum(object, ...)
 \item{num_pcs_compute}{Number of PCs to calculate. Ignore if dr is specified}
 
 \item{num_pcs_use}{Number of PCs used for clustering}
-
-\item{labels}{Labels specifying different samples}
 
 \item{redo_pca}{If TRUE, PCA is rerun for each sample separately for clustering}
 
@@ -125,6 +129,10 @@ cluster_sim_spectrum(object, ...)
 
 \item{verbose}{If TRUE, progress message is provided}
 
+\item{label_tag}{Column in the meta.data slot showing sample labels}
+
+\item{cluster_col}{Column in the meta.data slot showing the cluster labels}
+
 \item{var_genes}{Genes used for similarity calculation. If NULL, predefined variable features are used}
 
 \item{use_scale}{If TRUE, scale.data rather than data slot is used for similarity calculation}
@@ -132,8 +140,6 @@ cluster_sim_spectrum(object, ...)
 \item{use_dr}{Name of reduction used for clustering}
 
 \item{dims_use}{Dimensions in the reduction used for clustering}
-
-\item{label_tag}{Column in the meta.data slot showing sample labels}
 
 \item{redo_pca_with_data}{If TRUE, data slot is used to redo PCA for each sample. Ignore if redo_pca is FALSE}
 

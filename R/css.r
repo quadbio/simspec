@@ -4,6 +4,7 @@
 #'@param num_pcs_compute Number of PCs to calculate. Ignore if dr is specified
 #'@param num_pcs_use Number of PCs used for clustering
 #'@param labels Labels specifying different samples
+#'@param cluster_labels Use the provided clustering results instead of doing clustering per sample
 #'@param redo_pca If TRUE, PCA is rerun for each sample separately for clustering
 #'@param k Number of nearest neighbors of the kNN network used for clustering
 #'@param min_batch_size The minimal cell number of a batch to be clustered to generate references
@@ -31,11 +32,12 @@
 #'@export
 #'@method cluster_sim_spectrum default
 cluster_sim_spectrum.default <- function(object, # expression matrix
+                                         labels,
+                                         cluster_labels = NULL,
                                          dr = NULL,
                                          dr_input = NULL,
                                          num_pcs_compute = 50,
                                          num_pcs_use = 20, # for dimension reduction
-                                         labels,
                                          redo_pca = FALSE,
                                          k = 20,
                                          min_batch_size = k * 2,
@@ -64,60 +66,75 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   train_on <- match.arg(train_on)
   spectrum_dist_type <- match.arg(spectrum_dist_type)
   data <- object
-  if (is.null(dr_input))
-    dr_input <- data
   
-  if (is.null(dr)){
-    if (verbose)
-      message("No dimension reduction is provided. Start to do truncated PCA...")
-    
-    t_pca <- irlba::irlba(t(dr_input), nv = num_pcs_compute)
-    dr <- t_pca$u %*% diag(t_pca$d)
-    dr <- dr[,1:num_pcs_use]
-    rownames(dr) <- colnames(data)
-    
-    if (verbose)
-      cat("PCA finished.\n")
-  }
-  
-  if (verbose)
-    message("Start to do clustering for each sample...")
   labels <- as.factor(labels)
   batches <- names(which(table(labels) >= min_batch_size))
   
-  cl <- lapply(batches, function(x){
-    idx <- which(labels == x)
-    dr_x <- dr[idx,]
-    if (redo_pca){
-      if (verbose)
-        message(paste0("  Redoing truncated PCA on sample ", x, "..."))
-      t_pca <- irlba::irlba(t(dr_input[,idx]), nv = num_pcs_compute)
-      dr_x <- t_pca$u %*% diag(t_pca$d)
-      dr_x <- dr_x[,1:num_pcs_use]
-      rownames(dr_x) <- colnames(data)[idx]
-    }
-    knn <- build_knn_graph(t(dr_x), k = k, ..., verbose = verbose > 1)
-    rownames(knn) <- colnames(data)[idx]
-    colnames(knn) <- colnames(data)[idx]
+  if (is.null(cluster_labels)){ # do clustering when the cluster labels are not provided
+    if (is.null(dr_input))
+      dr_input <- data
     
-    if (cluster_method == "Seurat" && requireNamespace("Seurat", quietly=T)){
-      cl <- Seurat::FindClusters(Seurat::as.Graph(knn), resolution = cluster_resolution, verbose = verbose > 1)[,1]
-    } else if (requireNamespace("igraph", quietly=T)){
-      graph <- igraph::graph_from_adjacency_matrix(knn, mode = "undirected", weighted = T)
-      cl <- igraph::walktrap.community(graph)
-      cl <- as.factor(setNames(cl$membership, cl$names)[rownames(knn)])
-    } else{
-      stop("At least one of Seurat and igraph should be installed.")
+    if (is.null(dr)){
+      if (verbose)
+        message("No dimension reduction is provided. Start to do truncated PCA...")
+      
+      t_pca <- irlba::irlba(t(dr_input), nv = num_pcs_compute)
+      dr <- t_pca$u %*% diag(t_pca$d)
+      dr <- dr[,1:num_pcs_use]
+      rownames(dr) <- colnames(data)
+      
+      if (verbose)
+        cat("PCA finished.\n")
     }
     
     if (verbose)
-      message(paste0("  Done clustering of sample ", x, "."))
-    return(cl)
-  })
-  names(cl) <- batches
-  if (verbose)
-    message("Finished clustering.")
-  
+      message("Start to do clustering for each sample...")
+    
+    cl <- lapply(batches, function(x){
+      idx <- which(labels == x)
+      dr_x <- dr[idx,]
+      if (redo_pca){
+        if (verbose)
+          message(paste0("  Redoing truncated PCA on sample ", x, "..."))
+        t_pca <- irlba::irlba(t(dr_input[,idx]), nv = num_pcs_compute)
+        dr_x <- t_pca$u %*% diag(t_pca$d)
+        dr_x <- dr_x[,1:num_pcs_use]
+        rownames(dr_x) <- colnames(data)[idx]
+      }
+      knn <- build_knn_graph(t(dr_x), k = k, ..., verbose = verbose > 1)
+      rownames(knn) <- colnames(data)[idx]
+      colnames(knn) <- colnames(data)[idx]
+      
+      if (cluster_method == "Seurat" && requireNamespace("Seurat", quietly=T)){
+        cl <- Seurat::FindClusters(Seurat::as.Graph(knn), resolution = cluster_resolution, verbose = verbose > 1)[,1]
+      } else if (requireNamespace("igraph", quietly=T)){
+        graph <- igraph::graph_from_adjacency_matrix(knn, mode = "undirected", weighted = T)
+        cl <- igraph::walktrap.community(graph)
+        cl <- as.factor(setNames(cl$membership, cl$names)[rownames(knn)])
+      } else{
+        stop("At least one of Seurat and igraph should be installed.")
+      }
+      
+      if (verbose)
+        message(paste0("  Done clustering of sample ", x, "."))
+      return(cl)
+    })
+    names(cl) <- batches
+    if (verbose)
+      message("Finished clustering.")
+    
+  } else{ # use the clustering labels instead of doing clustering from scratch
+    if (verbose)
+      message("Use the provided clustering labels.")
+    
+    cluster_labels <- factor(cluster_labels)
+    cl <- lapply(batches, function(x){
+      idx <- which(labels == x)
+      return(setNames(droplevels(cluster_labels[idx]), colnames(data)[idx]))
+    })
+    names(cl) <- batches
+  }
+    
   idx_toofew_cl_batches <- which(sapply(cl, function(x) length(levels(x)) < min_cluster_num))
   if (length(idx_toofew_cl_batches) > 0){
     if (verbose)
@@ -139,18 +156,22 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   }
   
   if (spectrum_type %in% c("corr_ztransform","corr_kernel","corr_raw")){
+    if (verbose)
+      message("Calculating average profiles of clusters...")
+    
     cl_profiles <- lapply(batches, function(x){
       idx <- which(labels == x)
-      profiles <- sapply(levels(as.factor(cl[[x]])), function(cl_x)
-        apply(data[,idx[as.factor(cl[[x]])==cl_x]], 1, mean))
+      profiles <- sapply(levels(as.factor(cl[[x]])), function(cl_x){
+        if(sum(as.factor(cl[[x]])==cl_x) == 1)
+          return(data[,idx[as.factor(cl[[x]])==cl_x]])
+        apply(data[,idx[as.factor(cl[[x]])==cl_x]], 1, mean)
+      })
       return(profiles)
     })
     names(cl_profiles) <- batches
-    if (verbose)
-      message("Obtained average profiles of clusters.")
     
     if (verbose)
-      message("Start to calculate standardized similarities to clusters...")
+      message("Calculating standardized similarities to clusters...")
     sim2profiles <- lapply(cl_profiles, function(profiles){
       if (corr_method == "pearson"){
         sims <- qlcMatrix::corSparse(data, Matrix(profiles))
@@ -178,8 +199,10 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
     }
   } else if (spectrum_type %in% c("nnet","lasso")){
     if (verbose)
-      message("Start to build multinomial logistic regression models...")
+      message("Building multinomial logistic regression models...")
     
+    if (verbose)
+      message("Training models...")
     models <- lapply(batches, function(x){
       idx_x <- which(labels == x)
       cl_x <- cl[[x]]
@@ -240,8 +263,9 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       return(m)
     })
     names(models) <- batches
+    
     if (verbose)
-      message("Models trained, start to produce likelihood spectrum...")
+      message("Calculating likelihood spectrum...")
     
     sim2profiles <- lapply(models, function(m){
       if (spectrum_type == "lasso"){
@@ -265,7 +289,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   sim2profiles_raw <- sim2profiles
   if (merge_spectrums){
     if (verbose)
-      message("Start to merge similar spectrums...")
+      message("Merging similar spectrums...")
     
     dist_css <- NULL
     if (spectrum_dist_type == "pearson"){
@@ -286,7 +310,7 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   colnames(sim2profiles) <- paste0("CSS_", 1:ncol(sim2profiles))
   
   if (verbose)
-    message("Done.")
+    message("Done. Returning results...")
   
   if (return_css_only)
     return(sim2profiles)
@@ -306,11 +330,12 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
   return(res)
 }
 
+#'@param label_tag Column in the meta.data slot showing sample labels
+#'@param cluster_col Column in the meta.data slot showing the cluster labels
 #'@param var_genes Genes used for similarity calculation. If NULL, predefined variable features are used
 #'@param use_scale If TRUE, scale.data rather than data slot is used for similarity calculation
 #'@param use_dr Name of reduction used for clustering
 #'@param dims_use Dimensions in the reduction used for clustering
-#'@param label_tag Column in the meta.data slot showing sample labels
 #'@param redo_pca_with_data If TRUE, data slot is used to redo PCA for each sample. Ignore if redo_pca is FALSE
 #'@param reduction.name Reduction name of the CSS representation in the returned Seurat object
 #'@param reduction.key Reduction key of the CSS representation in the returned Seurat object
@@ -319,11 +344,12 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
 #'@export
 #'@method cluster_sim_spectrum Seurat
 cluster_sim_spectrum.Seurat <- function(object,
+                                        label_tag,
+                                        cluster_col = NULL,
                                         var_genes = NULL,
                                         use_scale = F,
                                         use_dr = "pca",
                                         dims_use = 1:20,
-                                        label_tag,
                                         redo_pca = FALSE,
                                         redo_pca_with_data = FALSE,
                                         k = 20, min_batch_size = k*2,
@@ -364,10 +390,20 @@ cluster_sim_spectrum.Seurat <- function(object,
       dr_input <- object[[object@active.assay]]@scale.data[var_genes,]
     }
   }
-  
   dr <- object@reductions[[use_dr]]@cell.embeddings[,dims_use]
+  
   labels <- object@meta.data[,label_tag]
-  css <- cluster_sim_spectrum.default(object = data, dr = dr, dr_input = dr_input, labels = labels, redo_pca = redo_pca, k = k, min_batch_size = min_batch_size, ..., cluster_resolution = cluster_resolution,
+  cluster_labels <- NULL
+  if (! is.null(cluster_col)){
+    if (sum(colnames(object@meta.data) == cluster_col) == 1){
+      cluster_labels <- object@meta.data[,cluster_col]
+    } else{
+      message("The provided cluster label column doesn't exist in the Seurat object. Will do clustering from scratch.")
+    }
+  }
+  
+  css <- cluster_sim_spectrum.default(object = data, labels = labels, cluster_labels = cluster_labels,
+                                      dr = dr, dr_input = dr_input, redo_pca = redo_pca, k = k, min_batch_size = min_batch_size, ..., cluster_resolution = cluster_resolution,
                                       spectrum_type = spectrum_type, corr_method = corr_method, lambda = lambda, threads = threads,
                                       train_on = train_on, downsample_ratio = downsample_ratio, k_pseudo = k_pseudo, logscale_likelihood = logscale_likelihood,
                                       merge_spectrums = merge_spectrums, merge_height_prop = merge_height_prop, spectrum_dist_type = spectrum_dist_type, spectrum_cl_method = spectrum_cl_method,
