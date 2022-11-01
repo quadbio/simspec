@@ -3,9 +3,11 @@ An R package to calculate representation of cells in single-cell genomic data, b
 
 Recent update
 ------
-(221031)
+(221101)
 1. Implement `estimate_projection_failure` function to estimate failure likelihood of data projection to the given reference for each query cell
 2. Add verbose messages to the `transfer_labels` function
+3. Support providing cluster labels instead of doing clustering per sample from scratch in `cluster_sim_spectrum`
+4. Update verbose message
 
 (220622)
 1. Add `min_cluster_num` parameter to `cluster_sim_spectrum` function to exclude samples with too few clusters from the ref profiles
