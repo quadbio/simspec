@@ -47,3 +47,14 @@ ref_sim_spectrum <- function(object, ...){
 run_PCA <- function(object, ...){
   UseMethod(generic = 'run_PCA', object = object)
 }
+
+#' Regress out variables from cell embeddings
+#' 
+#' Regress out variables from cell embeddings with a linear model
+#' 
+#' @param object An object
+#' @rdname regress_out_from_embeddings
+#' @export regress_out_from_embeddings
+regress_out_from_embeddings <- function(object, ...){
+  UseMethod(generic = 'regress_out_from_embeddings', object = object)
+}

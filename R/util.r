@@ -90,10 +90,11 @@ build_knn_graph <- function(data,
 #'@import Matrix
 #'@param knn_adj The adjacent matrix of the kNN network
 #'@param ratio The downsample rate
-#'@param init_dist Maximal distance on the kNN netowkr to group a cell to the selected capital or pseudocell center
+#'@param init_dist Maximal distance on the kNN network to group a cell to the selected capital or pseudocell center
 #'@param max_dist A cell which is not grouped to any pseudocell territory is grouped to the closest one if its distance to the capital is no more than max_dist
 #'@param min_pooled_cells Only pseudocells covering at least this number of cells are valid
 #'@param min_seed_num The minimum number of seed capitals to start the procedure
+#'@param seed The base seed for randomly assigning a cell to a capital candidate
 #'@return A data.frame indicating indices of cells and pseudocells
 #'@export
 construct_pseudocells <- function(knn_adj,
@@ -101,11 +102,16 @@ construct_pseudocells <- function(knn_adj,
                                   init_dist = 1,
                                   max_dist = 2,
                                   min_pooled_cells = 2,
-                                  min_seed_num = 1){
+                                  min_seed_num = 1,
+                                  seed = 12345){
   rownames(knn_adj) <- 1:nrow(knn_adj)
   colnames(knn_adj) <- 1:ncol(knn_adj)
+  set.seed(seed)
   capitals <- which(runif(nrow(knn_adj)) <= ratio)
-  if (length(capitals) == 0) capitals <- sample(1:nrow(knn_adj), min_seed_num)
+  if (length(capitals) == 0){
+    set.seed(seed)
+    capitals <- sample(1:nrow(knn_adj), min_seed_num)
+  }
   
   graph <- igraph::graph_from_adjacency_matrix(knn_adj > 0, mode = "undirected")
   dist_to_capitals <- igraph::distances(graph, v = as.character(1:ncol(knn_adj)), to = as.character(capitals))
@@ -113,6 +119,8 @@ construct_pseudocells <- function(knn_adj,
   selected <- dist_to_capitals <= init_dist
   selected <- t(sapply(1:nrow(selected), function(i){
     sel <- selected[i,]
+    if (! is.null(seed))
+      set.seed(seed + i)
     if (sum(sel) == 1) return(sel)
     if (sum(sel) > 1) return(1:length(sel) == sample(which(sel),1))
     if (sum(sel) == 0 & min(dist_to_capitals[i,]) <= max_dist) return(1:length(sel) == sample(which(dist_to_capitals[i,] <= max_dist),1))
@@ -159,6 +167,7 @@ rank_input_matrix <- function(mat){
 #' @import Matrix
 #' @param mat The input matrix
 #' @return The normalized matrix
+#' @export
 rowNorm <- function(mat){
   diag_mat <- Diagonal(x = 1/rowSums(mat))
   res <- diag_mat %*% mat

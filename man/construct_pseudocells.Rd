@@ -10,7 +10,8 @@ construct_pseudocells(
   init_dist = 1,
   max_dist = 2,
   min_pooled_cells = 2,
-  min_seed_num = 1
+  min_seed_num = 1,
+  seed = 12345
 )
 }
 \arguments{
@@ -18,13 +19,15 @@ construct_pseudocells(
 
 \item{ratio}{The downsample rate}
 
-\item{init_dist}{Maximal distance on the kNN netowkr to group a cell to the selected capital or pseudocell center}
+\item{init_dist}{Maximal distance on the kNN network to group a cell to the selected capital or pseudocell center}
 
 \item{max_dist}{A cell which is not grouped to any pseudocell territory is grouped to the closest one if its distance to the capital is no more than max_dist}
 
 \item{min_pooled_cells}{Only pseudocells covering at least this number of cells are valid}
 
 \item{min_seed_num}{The minimum number of seed capitals to start the procedure}
+
+\item{seed}{The base seed for randomly assigning a cell to a capital candidate}
 }
 \value{
 A data.frame indicating indices of cells and pseudocells
