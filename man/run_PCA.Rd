@@ -8,14 +8,16 @@
 \usage{
 run_PCA(object, ...)
 
-\method{run_PCA}{default}(object, npcs = 50, return_rotation = F)
+\method{run_PCA}{default}(object, npcs = 50, return_rotation = F, ...)
 
 \method{run_PCA}{Seurat}(
   object,
   reduction,
   npcs = 10,
   reduction.name = NULL,
-  reduction.key = NULL
+  reduction.key = NULL,
+  return_rotation = FALSE,
+  ...
 )
 }
 \arguments{
@@ -23,7 +25,7 @@ run_PCA(object, ...)
 
 \item{npcs}{Number of PCs to compute}
 
-\item{return_rotation}{Whether to return the rotation matrix}
+\item{return_rotation}{Whether to return the PCA rotations to the misc slot}
 
 \item{reduction}{The reduction to run PCA on}
 

@@ -25,7 +25,6 @@ Imports:
     irlba,
     igraph,
     RANN,
-    qlcMatrix (>= 0.9.4),
     mixtools
 Suggests:
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1

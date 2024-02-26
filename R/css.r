@@ -174,14 +174,14 @@ cluster_sim_spectrum.default <- function(object, # expression matrix
       message("Calculating standardized similarities to clusters...")
     sim2profiles <- lapply(cl_profiles, function(profiles){
       if (corr_method == "pearson"){
-        sims <- qlcMatrix::corSparse(data, Matrix(profiles))
+        sims <- corSparse(data, Matrix(profiles))
       } else if (corr_method == "spearman"){
         if (use_fast_rank && requireNamespace("presto", quietly=T)){
           ranked_data <- presto::rank_matrix(data)$X_ranked
         } else{
           ranked_data <- rank_input_matrix(data)
         }
-        sims <- qlcMatrix::corSparse(ranked_data, profiles)
+        sims <- corSparse(ranked_data, profiles)
       }
       return(sims)
     })
@@ -378,19 +378,47 @@ cluster_sim_spectrum.Seurat <- function(object,
   if (is.null(var_genes))
     var_genes <- Seurat::VariableFeatures(object)
   
-  data <- object[[object@active.assay]]@data[var_genes,]
-  if (use_scale)
-    data <- object[[object@active.assay]]@scale.data[var_genes,]
+  if (is(object[[object@active.assay]], 'Assay5')){
+      features_usage <- object[[object@active.assay]]@features[[]]
+      cells_usage <- object[[object@active.assay]]@cells[[]]
+      
+      normdata <- object[[object@active.assay]]@layers$data
+      rownames(normdata) <- rownames(features_usage)[features_usage[,'data']]
+      colnames(normdata) <- rownames(cells_usage)[cells_usage[,'data']]
+      normdata <- normdata[var_genes, ]
+      
+      res_scaleddata <- try({
+          scaledata <- object[[object@active.assay]]@layers$scale.data
+          rownames(scaledata) <- rownames(features_usage)[features_usage[,'scale.data']]
+          colnames(scaledata) <- rownames(cells_usage)[cells_usage[,'scale.data']]
+          scaledata <- scaledata[var_genes, ]
+      }, silent = TRUE)
+      if(inherits(res_scaleddata, "try-error")){
+          scaledata <- NULL
+          message('The scale.data slot is not available. Any attempt to use this slot will fail.')
+      }
+  } else{
+      normdata <- object[[object@active.assay]]@data[var_genes,]
+      scaledata <- object[[object@active.assay]]@scale.data[var_genes,]
+  }
+  
+  if (use_scale){
+      data <- scaledata
+  } else{
+      data <- normdata
+  }
   
   dr_input <- NULL
   if (redo_pca){
     if (redo_pca_with_data){
-      dr_input <- object[[object@active.assay]]@data[var_genes,]
+      dr_input <- normdata
     } else{
-      dr_input <- object[[object@active.assay]]@scale.data[var_genes,]
+      dr_input <- scaledata
     }
   }
   dr <- object@reductions[[use_dr]]@cell.embeddings[,dims_use]
+  
+  #message(paste0("colnames of data: ", paste(head(colnames(data)), collapse=',')))
   
   labels <- object@meta.data[,label_tag]
   cluster_labels <- NULL
@@ -463,7 +491,16 @@ css_project.Seurat <- function(object,
                                use_fast_rank = TRUE,
                                reduction.name = "css_proj",
                                reduction.key = "CSSPROJ_"){
-  dat <- object@assays[[DefaultAssay(object)]]@data
+  if (is(object[[object@active.assay]], 'Assay5')){
+      features_usage <- object[[object@active.assay]]@features[[]]
+      cells_usage <- object[[object@active.assay]]@cells[[]]
+      
+      dat <- object[[object@active.assay]]@layers$data
+      rownames(dat) <- rownames(features_usage)[features_usage[,'data']]
+      colnames(dat) <- rownames(cells_usage)[cells_usage[,'data']]
+  } else{
+      dat <- object@assays[[DefaultAssay(object)]]@data
+  }
   css_proj <- css_project(dat, model, use_fast_rank = use_fast_rank)
   rownames(css_proj) <- colnames(object)
   object[[reduction.name]] <- CreateDimReducObject(css_proj, key = reduction.key, assay = DefaultAssay(object))

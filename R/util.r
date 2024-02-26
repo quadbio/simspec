@@ -175,3 +175,49 @@ rowNorm <- function(mat){
   return(res)
 }
 
+# The corSparse function originally from qlcMatrix. As qlcMatrix is no longer available in CRAN,
+# to avoid further complication to install qlcMatrix, the corSparse function is copied here.
+#
+# ============================================================
+# various association measures between sparse matrices
+# ============================================================
+
+# Pearson correlation matrix between columns of X, Y
+# http://stackoverflow.com/questions/5888287/running-cor-or-any-variant-over-a-sparse-matrix-in-r
+#
+# covmat uses E[(X-muX)'(Y-muY)] = E[X'Y] - muX'muY
+# with sample correction n/(n-1) this leads to cov = ( X'Y - n*muX'muY ) / (n-1)
+#
+# the sd in the case Y!=NULL uses E[X-mu]^2 = E[X^2]-mu^2
+# with sample correction n/(n-1) this leads to sd^2 = ( X^2 - n*mu^2 ) / (n-1)
+#
+# Note that results larger than 1e4 x 1e4 will become very slow, because the resulting matrix is not sparse anymore.
+
+corSparse <- function(X, Y = NULL, cov = FALSE) {
+
+    X <- as(X,"dgCMatrix")
+    n <- nrow(X)
+    muX <- colMeans(X)
+    
+    if (!is.null(Y)) {
+        stopifnot( nrow(X) == nrow(Y) )
+        Y <- as(Y,"dgCMatrix")
+        muY <- colMeans(Y)
+        covmat <- ( as.matrix(crossprod(X,Y)) - n*tcrossprod(muX,muY) ) / (n-1)
+        sdvecX <- sqrt( (colSums(X^2) - n*muX^2) / (n-1) )
+        sdvecY <- sqrt( (colSums(Y^2) - n*muY^2) / (n-1) )
+        cormat <- covmat/tcrossprod(sdvecX,sdvecY)
+    } else {
+        covmat <- ( as.matrix(crossprod(X)) - n*tcrossprod(muX) ) / (n-1)
+        sdvec <- sqrt(diag(covmat))
+        cormat <- covmat/tcrossprod(sdvec)
+    }
+    
+    if (cov) {
+        dimnames(covmat) <- NULL
+        return(covmat)
+    } else {
+        dimnames(cormat) <- NULL
+        return(cormat)
+    }
+}

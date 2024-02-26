@@ -11,14 +11,14 @@ ref_sim_spectrum.default <- function(object, ref, method = c("pearson","spearman
   
   candidates <- intersect(rownames(object), rownames(ref))
   if (method == "pearson"){
-    corr <- qlcMatrix::corSparse(object[candidates,], ref[candidates,])
+    corr <- corSparse(object[candidates,], ref[candidates,])
   } else if (method == "spearman"){
     if (use_fast_rank && requireNamespace("presto", quietly=T)){
       ranked_data <- presto::rank_matrix(object[candidates,])$X_ranked
     } else{
       ranked_data <- rank_input_matrix(object[candidates,])
     }
-    corr <- qlcMatrix::corSparse(ranked_data, ref[candidates,])
+    corr <- corSparse(ranked_data, ref[candidates,])
   }
   if (scale)
     corr <- t(scale(t(corr)))
@@ -41,7 +41,13 @@ ref_sim_spectrum.Seurat <- function(object,
                                     reduction.name = "rss",
                                     reduction.key = "RSS_",
                                     ...){
-  input <- object@assays[[DefaultAssay(object)]]@data
+  if (is(object@assays[[DefaultAssay(object)]], 'Assay5')){
+      input <- object[[object@active.assay]]@layers$data
+      row.names(input) <- row.names(object)
+      colnames(input) <- colnames(object)
+  } else{
+      input <- object@assays[[DefaultAssay(object)]]@data
+  }
   rss <- ref_sim_spectrum.default(input, ref, ...)
   if (as_assay){
     object[[assay.name]] <- CreateAssayObject(data = t(rss))
