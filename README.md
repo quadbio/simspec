@@ -3,6 +3,10 @@ An R package to calculate representation of cells in single-cell genomic data, b
 
 Recent update
 ------
+(240226)
+1. Add support to Assay5 in Seurat v5
+2. Remove the qlcMatrix dependency
+
 (221101)
 1. Implement `estimate_projection_failure` function to estimate failure likelihood of data projection to the given reference for each query cell
 2. Add verbose messages to the `transfer_labels` function
