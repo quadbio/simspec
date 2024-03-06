@@ -385,35 +385,35 @@ cluster_sim_spectrum.Seurat <- function(object,
       normdata <- object[[object@active.assay]]@layers$data
       rownames(normdata) <- rownames(features_usage)[features_usage[,'data']]
       colnames(normdata) <- rownames(cells_usage)[cells_usage[,'data']]
-      normdata <- normdata[var_genes, ]
+      normdata <- normdata
       
       res_scaleddata <- try({
           scaledata <- object[[object@active.assay]]@layers$scale.data
           rownames(scaledata) <- rownames(features_usage)[features_usage[,'scale.data']]
           colnames(scaledata) <- rownames(cells_usage)[cells_usage[,'scale.data']]
-          scaledata <- scaledata[var_genes, ]
+          scaledata <- scaledata
       }, silent = TRUE)
       if(inherits(res_scaleddata, "try-error")){
           scaledata <- NULL
           message('The scale.data slot is not available. Any attempt to use this slot will fail.')
       }
   } else{
-      normdata <- object[[object@active.assay]]@data[var_genes,]
-      scaledata <- object[[object@active.assay]]@scale.data[var_genes,]
+      normdata <- object[[object@active.assay]]@data
+      scaledata <- object[[object@active.assay]]@scale.data
   }
   
   if (use_scale){
-      data <- scaledata
+      data <- scaledata[var_genes,]
   } else{
-      data <- normdata
+      data <- normdata[var_genes,]
   }
   
   dr_input <- NULL
   if (redo_pca){
     if (redo_pca_with_data){
-      dr_input <- normdata
+      dr_input <- normdata[var_genes,]
     } else{
-      dr_input <- scaledata
+      dr_input <- scaledata[var_genes,]
     }
   }
   dr <- object@reductions[[use_dr]]@cell.embeddings[,dims_use]
