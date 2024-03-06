@@ -3,6 +3,9 @@ An R package to calculate representation of cells in single-cell genomic data, b
 
 Recent update
 ------
+(240306)
+1. Fix bugs
+
 (240226)
 1. Add support to `Assay5` in Seurat v5
 2. Remove the `qlcMatrix` dependency
