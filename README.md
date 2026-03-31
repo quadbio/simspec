@@ -1,6 +1,8 @@
 # simspec: Similarity Spectrum
 An R package to calculate representation of cells in single-cell genomic data, by their similarities to external references (RSS) or cell clusters in the data (CSS). More details of the method are available in the paper **[CSS: cluster similarity spectrum integration of single-cell genomics data](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02147-4)**. The manscript is also available in [biorxiv](https://doi.org/10.1101/2020.02.27.968560).
 
+We have now implemented the Python version of simspec: [pysimspec](https://github.com/quadbio/pysimspec).
+
 Recent update
 ------
 (240306)
